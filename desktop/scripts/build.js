@@ -73,12 +73,16 @@ console.log("[5/5] Building frontend...");
 
 // Set the API base for production (served from same origin)
 const frontendEnv = path.join(FRONTEND_SRC, ".env");
-const envContent = fs.readFileSync(frontendEnv, "utf8");
-const prodEnv = envContent.replace(
-  /VITE_API_BASE=.*/,
-  "VITE_API_BASE='/api'"
-);
-fs.writeFileSync(frontendEnv, prodEnv);
+let envContent = "";
+if (fs.existsSync(frontendEnv)) {
+  envContent = fs.readFileSync(frontendEnv, "utf8");
+}
+if (envContent.includes("VITE_API_BASE")) {
+  envContent = envContent.replace(/VITE_API_BASE=.*/, "VITE_API_BASE='/api'");
+} else {
+  envContent += "\nVITE_API_BASE='/api'\n";
+}
+fs.writeFileSync(frontendEnv, envContent);
 
 run("yarn build", FRONTEND_SRC);
 

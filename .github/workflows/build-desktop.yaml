@@ -18,22 +18,13 @@ jobs:
       - uses: actions/setup-node@v4
         with:
           node-version: 20
-          cache: yarn
-          cache-dependency-path: |
-            desktop/yarn.lock
-            server/yarn.lock
-            frontend/yarn.lock
 
       - name: Install frontend dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
         working-directory: frontend
 
-      - name: Install server dependencies (dev)
-        run: yarn install --frozen-lockfile
-        working-directory: server
-
       - name: Install desktop dependencies
-        run: yarn install --frozen-lockfile
+        run: yarn install
         working-directory: desktop
 
       - name: Build desktop app
