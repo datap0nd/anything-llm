@@ -1,0 +1,63 @@
+name: Build Desktop Installer
+
+on:
+  workflow_dispatch:
+  push:
+    tags:
+      - "desktop-v*"
+
+permissions:
+  contents: write
+
+jobs:
+  build-windows:
+    runs-on: windows-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          cache: yarn
+          cache-dependency-path: |
+            desktop/yarn.lock
+            server/yarn.lock
+            frontend/yarn.lock
+
+      - name: Install frontend dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: frontend
+
+      - name: Install server dependencies (dev)
+        run: yarn install --frozen-lockfile
+        working-directory: server
+
+      - name: Install desktop dependencies
+        run: yarn install --frozen-lockfile
+        working-directory: desktop
+
+      - name: Build desktop app
+        run: yarn build
+        working-directory: desktop
+
+      - name: Build Windows installer
+        run: npx electron-builder --win --x64
+        working-directory: desktop
+        env:
+          GH_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: windows-installer
+          path: |
+            desktop/release/*.exe
+            desktop/release/*.yml
+
+      - name: Create release
+        if: startsWith(github.ref, 'refs/tags/')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            desktop/release/*.exe
+          draft: true

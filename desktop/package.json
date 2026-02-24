@@ -1,0 +1,79 @@
+{
+  "name": "anythingllm-desktop",
+  "version": "1.11.0",
+  "description": "AnythingLLM Desktop – LiteLLM Edition",
+  "main": "src/main.js",
+  "author": "datap0nd",
+  "license": "MIT",
+  "scripts": {
+    "start": "electron .",
+    "build": "node scripts/build.js",
+    "dist:win": "node scripts/build.js && electron-builder --win --x64",
+    "dist:mac": "node scripts/build.js && electron-builder --mac",
+    "dist:linux": "node scripts/build.js && electron-builder --linux"
+  },
+  "build": {
+    "appId": "com.datap0nd.anythingllm",
+    "productName": "AnythingLLM",
+    "copyright": "Copyright © 2026 datap0nd",
+    "directories": {
+      "output": "release",
+      "buildResources": "assets"
+    },
+    "files": [
+      "src/**/*",
+      "app/**/*",
+      "!app/server/node_modules/**/*",
+      "!app/collector/node_modules/**/*"
+    ],
+    "extraResources": [
+      {
+        "from": "app/server",
+        "to": "server",
+        "filter": ["**/*", "!storage/**/*"]
+      },
+      {
+        "from": "app/collector",
+        "to": "collector",
+        "filter": ["**/*"]
+      }
+    ],
+    "win": {
+      "target": [
+        {
+          "target": "nsis",
+          "arch": ["x64"]
+        }
+      ],
+      "icon": "assets/icon.ico",
+      "artifactName": "AnythingLLM-Setup-${version}.${ext}"
+    },
+    "nsis": {
+      "oneClick": false,
+      "allowToChangeInstallationDirectory": true,
+      "createDesktopShortcut": true,
+      "createStartMenuShortcut": true,
+      "installerIcon": "assets/icon.ico",
+      "uninstallerIcon": "assets/icon.ico",
+      "installerHeaderIcon": "assets/icon.ico",
+      "shortcutName": "AnythingLLM"
+    },
+    "mac": {
+      "target": ["dmg"],
+      "icon": "assets/icon.icns",
+      "category": "public.app-category.productivity"
+    },
+    "linux": {
+      "target": ["AppImage", "deb"],
+      "icon": "assets",
+      "category": "Utility"
+    }
+  },
+  "devDependencies": {
+    "electron": "^33.0.0",
+    "electron-builder": "^25.1.8"
+  },
+  "dependencies": {
+    "electron-is-dev": "^2.0.0"
+  }
+}
