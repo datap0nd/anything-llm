@@ -12,23 +12,11 @@
 
 const { v4 } = require("uuid");
 const { ChatOpenAI } = require("@langchain/openai");
-const { ChatAnthropic } = require("@langchain/anthropic");
-const { ChatCohere } = require("@langchain/cohere");
-const { ChatOllama } = require("@langchain/community/chat_models/ollama");
-const { toValidNumber, safeJsonParse } = require("../../../http");
+const { safeJsonParse } = require("../../../http");
 const { getLLMProviderClass } = require("../../../helpers");
-const { parseLMStudioBasePath } = require("../../../AiProviders/lmStudio");
-const {
-  parseDockerModelRunnerEndpoint,
-} = require("../../../AiProviders/dockerModelRunner");
-const { parseFoundryBasePath } = require("../../../AiProviders/foundry");
 const {
   SystemPromptVariables,
 } = require("../../../../models/systemPromptVariables");
-const {
-  createBedrockChatClient,
-} = require("../../../AiProviders/bedrock/utils");
-const { OllamaAILLM } = require("../../../AiProviders/ollama");
 
 const DEFAULT_WORKSPACE_PROMPT =
   "You are a helpful ai assistant who can assist the user and use tools available to help answer the users prompts and questions.";
@@ -88,258 +76,14 @@ class Provider {
    * @param {LangChainModelConfig} config - Config to be used to override default connection object.
    * @returns
    */
-  static LangChainChatModel(provider = "openai", config = {}) {
+  static LangChainChatModel(provider = "litellm", config = {}) {
     switch (provider) {
-      // Cloud models
-      case "openai":
-        return new ChatOpenAI({
-          apiKey: process.env.OPEN_AI_KEY,
-          ...config,
-        });
-      case "anthropic":
-        return new ChatAnthropic({
-          apiKey: process.env.ANTHROPIC_API_KEY,
-          ...config,
-        });
-      case "groq":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://api.groq.com/openai/v1",
-          },
-          apiKey: process.env.GROQ_API_KEY,
-          ...config,
-        });
-      case "mistral":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://api.mistral.ai/v1",
-          },
-          apiKey: process.env.MISTRAL_API_KEY ?? null,
-          ...config,
-        });
-      case "openrouter":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://openrouter.ai/api/v1",
-            defaultHeaders: {
-              "HTTP-Referer": "https://anythingllm.com",
-              "X-Title": "AnythingLLM",
-            },
-          },
-          apiKey: process.env.OPENROUTER_API_KEY ?? null,
-          ...config,
-        });
-      case "perplexity":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://api.perplexity.ai",
-          },
-          apiKey: process.env.PERPLEXITY_API_KEY ?? null,
-          ...config,
-        });
-      case "togetherai":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://api.together.xyz/v1",
-          },
-          apiKey: process.env.TOGETHER_AI_API_KEY ?? null,
-          ...config,
-        });
-      case "generic-openai":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: process.env.GENERIC_OPEN_AI_BASE_PATH,
-          },
-          apiKey: process.env.GENERIC_OPEN_AI_API_KEY,
-          maxTokens: toValidNumber(
-            process.env.GENERIC_OPEN_AI_MAX_TOKENS,
-            1024
-          ),
-          ...config,
-        });
-      case "bedrock":
-        return createBedrockChatClient(config);
-      case "fireworksai":
-        return new ChatOpenAI({
-          apiKey: process.env.FIREWORKS_AI_LLM_API_KEY,
-          ...config,
-        });
-      case "apipie":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://apipie.ai/v1",
-          },
-          apiKey: process.env.APIPIE_LLM_API_KEY ?? null,
-          ...config,
-        });
-      case "deepseek":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://api.deepseek.com/v1",
-          },
-          apiKey: process.env.DEEPSEEK_API_KEY ?? null,
-          ...config,
-        });
-      case "xai":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://api.x.ai/v1",
-          },
-          apiKey: process.env.XAI_LLM_API_KEY ?? null,
-          ...config,
-        });
-      case "zai":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://api.z.ai/api/paas/v4",
-          },
-          apiKey: process.env.ZAI_API_KEY ?? null,
-          ...config,
-        });
-      case "novita":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://api.novita.ai/v3/openai",
-          },
-          apiKey: process.env.NOVITA_LLM_API_KEY ?? null,
-          ...config,
-        });
-      case "ppio":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://api.ppinfra.com/v3/openai",
-          },
-          apiKey: process.env.PPIO_API_KEY ?? null,
-          ...config,
-        });
-      case "gemini":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://generativelanguage.googleapis.com/v1beta/openai/",
-          },
-          apiKey: process.env.GEMINI_API_KEY ?? null,
-          ...config,
-        });
-      case "moonshotai":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://api.moonshot.ai/v1",
-          },
-          apiKey: process.env.MOONSHOT_AI_API_KEY ?? null,
-          ...config,
-        });
-      case "cometapi":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://api.cometapi.com/v1",
-          },
-          apiKey: process.env.COMETAPI_LLM_API_KEY ?? null,
-          ...config,
-        });
-      case "giteeai":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://ai.gitee.com/v1",
-          },
-          apiKey: process.env.GITEE_AI_API_KEY ?? null,
-          ...config,
-        });
-      case "cohere":
-        return new ChatCohere({
-          apiKey: process.env.COHERE_API_KEY ?? null,
-          ...config,
-        });
-      case "privatemode":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: process.env.PRIVATEMODE_LLM_BASE_PATH,
-          },
-          apiKey: null,
-          ...config,
-        });
-      case "sambanova":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: "https://api.sambanova.ai/v1",
-          },
-          apiKey: process.env.SAMBANOVA_LLM_API_KEY ?? null,
-          ...config,
-        });
-      // OSS Model Runners
-      // case "anythingllm_ollama":
-      //   return new ChatOllama({
-      //     baseUrl: process.env.PLACEHOLDER,
-      //     ...config,
-      //   });
-      case "ollama":
-        return OllamaLangchainChatModel.create(config);
-      case "lmstudio": {
-        const apiKey = process.env.LMSTUDIO_AUTH_TOKEN ?? null;
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: parseLMStudioBasePath(process.env.LMSTUDIO_BASE_PATH),
-          },
-          apiKey: apiKey || "not-used",
-          ...config,
-        });
-      }
-      case "koboldcpp":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: process.env.KOBOLD_CPP_BASE_PATH,
-          },
-          apiKey: "not-used",
-          ...config,
-        });
-      case "localai":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: process.env.LOCAL_AI_BASE_PATH,
-          },
-          apiKey: process.env.LOCAL_AI_API_KEY ?? "not-used",
-          ...config,
-        });
-      case "textgenwebui":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: process.env.TEXT_GEN_WEB_UI_BASE_PATH,
-          },
-          apiKey: process.env.TEXT_GEN_WEB_UI_API_KEY ?? "not-used",
-          ...config,
-        });
       case "litellm":
         return new ChatOpenAI({
           configuration: {
             baseURL: process.env.LITE_LLM_BASE_PATH,
           },
           apiKey: process.env.LITE_LLM_API_KEY ?? null,
-          ...config,
-        });
-      case "nvidia-nim":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: process.env.NVIDIA_NIM_LLM_BASE_PATH,
-          },
-          apiKey: null,
-          ...config,
-        });
-      case "foundry": {
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: parseFoundryBasePath(process.env.FOUNDRY_BASE_PATH),
-          },
-          apiKey: null,
-          ...config,
-        });
-      }
-      case "docker-model-runner":
-        return new ChatOpenAI({
-          configuration: {
-            baseURL: parseDockerModelRunnerEndpoint(
-              process.env.DOCKER_MODEL_RUNNER_BASE_PATH
-            ),
-          },
-          apiKey: null,
           ...config,
         });
       default:
@@ -359,13 +103,8 @@ class Provider {
     return llm.promptWindowLimit(modelName);
   }
 
-  static defaultSystemPromptForProvider(provider = null) {
-    switch (provider) {
-      case "lmstudio":
-        return "You are a helpful ai assistant who can assist the user and use tools available to help answer the users prompts and questions. Tools will be handled by another assistant and you will simply receive their responses to help answer the user prompt - always try to answer the user's prompt the best you can with the context available to you and your general knowledge.";
-      default:
-        return DEFAULT_WORKSPACE_PROMPT;
-    }
+  static defaultSystemPromptForProvider(_provider = null) {
+    return DEFAULT_WORKSPACE_PROMPT;
   }
 
   /**
@@ -462,30 +201,6 @@ class Provider {
     return {
       textResponse: result.textResponse,
       functionCall: result.functionCall,
-    };
-  }
-}
-
-// Langchain Wrappers
-
-/**
- * Ollama Langchain Chat Model that supports passing in context window options
- * so that context window preferences are respected between Ollama chat/agent and in
- * Langchain tooling.
- */
-class OllamaLangchainChatModel {
-  static create(config = {}) {
-    return new ChatOllama({
-      baseUrl: process.env.OLLAMA_BASE_PATH,
-      ...this.queryOptions(config),
-      ...config,
-    });
-  }
-
-  static queryOptions(config = {}) {
-    const model = config?.model || process.env.OLLAMA_MODEL_PREF;
-    return {
-      num_ctx: OllamaAILLM.promptWindowLimit(model),
     };
   }
 }
