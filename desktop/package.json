@@ -5,6 +5,10 @@
   "main": "src/main.js",
   "author": "datap0nd",
   "license": "MIT",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/datap0nd/anything-llm.git"
+  },
   "scripts": {
     "start": "electron .",
     "build": "node scripts/build.js",
